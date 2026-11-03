@@ -16,7 +16,7 @@ type HeadSeg struct {
 
 func (h *HeadSeg) Crop(m *cv.Mat, fillWhite bool) (head *cv.Mat, err error) {
 	var seg *cv.Mat
-	if seg, err = h.extract(m); err != nil {
+	if seg, err = h.Extract(m); err != nil {
 		return
 	}
 	mask := seg.CvtColor(cv.COLOR_GRAY2BGR)
@@ -42,7 +42,7 @@ func (h *HeadSeg) CropFile(file string, fillWhite bool) (*cv.Mat, error) {
 	return h.Crop(m, fillWhite)
 }
 
-func (h *HeadSeg) extract(m *cv.Mat) (seg *cv.Mat, err error) {
+func (h *HeadSeg) Extract(m *cv.Mat) (seg *cv.Mat, err error) {
 	resized := m.Resize(cv.NewSize(h.width, h.height), 0, 0, cv.INTER_LINEAR)
 	rgb := resized.CvtColor(cv.COLOR_BGR2RGB)
 	resized.Free()
@@ -62,6 +62,15 @@ func (h *HeadSeg) extract(m *cv.Mat) (seg *cv.Mat, err error) {
 	seg = output.Resize(cv.NewSize(m.Cols(), m.Rows()), 0, 0, cv.INTER_LINEAR)
 	output.Free()
 	return
+}
+
+func (h *HeadSeg) ExtractFile(file string) (*cv.Mat, error) {
+	m := cv.IMRead(file, cv.FLAG_COLOR)
+	defer m.Free()
+	if m.Cols() < 4 || m.Rows() < 4 {
+		return nil, errors.New("read file failed")
+	}
+	return h.Extract(m)
 }
 
 func (h *HeadSeg) Close() {
